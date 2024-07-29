@@ -6,7 +6,7 @@ from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse, StreamingResponse
 
 debug = os.environ.get("GPTSCRIPT_DEBUG", "false") == "true"
-gateway_url = os.environ.get("GPTSCRIPT_GATEWAY_URL", "http://localhost:8080")
+gateway_url = os.environ.get("GPTSCRIPT_GATEWAY_URL", "https://gateway-api.gptscript.ai")
 api_key = os.environ.get("GPTSCRIPT_GATEWAY_API_KEY", "")
 app = FastAPI()
 
