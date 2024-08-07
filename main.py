@@ -1,7 +1,11 @@
 import os
+import time
 from typing import Any
 
+import uvicorn
+import asyncio
 import httpx
+import iso8601.iso8601
 from fastapi import FastAPI, Request
 from fastapi.responses import JSONResponse, StreamingResponse
 
@@ -67,12 +71,27 @@ async def _stream_chat_completion(content: Any):
                 yield chunk
 
 
-if __name__ == "__main__":
-    import uvicorn
-    import asyncio
+async def die_on_expiration(expiration: str):
+    if expiration == "":
+        return
+    await asyncio.sleep(iso8601.iso8601.parse_date(expiration).timestamp() - time.time())
+    raise asyncio.CancelledError()
 
+
+if __name__ == "__main__":
     try:
-        uvicorn.run("main:app", host="127.0.0.1", port=int(os.environ.get("PORT", "8000")),
-                    log_level="debug" if debug else "critical", access_log=debug)
+        config = uvicorn.Config("main:app", host="127.0.0.1", port=int(os.environ.get("PORT", "8000")),
+                                log_level="debug" if debug else "critical", access_log=debug)
+        server = uvicorn.Server(config)
+
+        loop = asyncio.new_event_loop()
+        asyncio.set_event_loop(loop)
+        coros = asyncio.gather(
+            loop.create_task(die_on_expiration(os.environ.get("GPTSCRIPT_CREDENTIAL_EXPIRATION", ""))),
+            loop.create_task(server.serve()),
+        )
+        loop.run_until_complete(coros)
     except (KeyboardInterrupt, asyncio.CancelledError):
-        pass
+        loop.run_until_complete(server.shutdown())
+        coros.cancel()
+        coros.exception()
