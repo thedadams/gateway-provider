@@ -1,6 +1,6 @@
 Name: GPTScript Gateway Provider
 Description: Model provider for GPTScript Gateway
 Model Provider: true
-credential: github.com/gptscript-ai/gateway-creds as github.com/gptscript-ai/gateway
+credential: github.com/thedadams/gateway-creds@testing as github.com/gptscript-ai/gateway
 
 #!sys.daemon /usr/bin/env python3 ${GPTSCRIPT_TOOL_DIR}/main.py
